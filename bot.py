@@ -18,7 +18,6 @@ class MyClient(discord.Client):
             return
 
         if message.content == '>topic':
-            #await message.channel.send('The topic is ' + str([ word[0].split('/')[0] for word in self.model.most_similar('업무', topn=3)]))
             a = ''
         elif message.content == '>train':
             await message.channel.send('Training')
@@ -33,6 +32,7 @@ class MyClient(discord.Client):
         else:
             self.messagelist = self.messagelist + \
                 okt.pos(message.content, norm=True, stem=True, join=True)
+            print(self.messagelist)
 
     async def on_typing(self, channel, user, when):
         print(user.name + '(' + str(user.id) + ') is typing')
