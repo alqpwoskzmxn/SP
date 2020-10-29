@@ -26,9 +26,7 @@ class MyClient(discord.Client):
         elif message.content == '>reset':
             self.model = ''
             self.messagelist = []
-        elif message.content == '>most_common':
-            text = nltk.Text(self.messagelist, name='NMSC')
-            await message.channel.send('Most common word: '  + str([ d[0].split('/')[0] for d in text.vocab().most_common(5)]))
+
         else:
             self.messagelist = self.messagelist + \
                 okt.pos(message.content, norm=True, stem=True, join=True)
