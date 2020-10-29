@@ -1,15 +1,23 @@
 import discord
 from konlpy.tag import Okt
-import nltk
-from gensim.models import word2vec
+from hanspell import spell_checker
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.svm import LinearSVC
+import joblib
+
+import re
 
 okt = Okt()
-model = ''
+
+model = joblib.load('model.pkl')
+tfidfvect = joblib.load('tfidf.pkl')
 
 
 class MyClient(discord.Client):
     messagelist = []
-    model = ''
+    topic = []
+
     async def on_ready(self):
         print('Logged on as', self.user)
 
@@ -18,18 +26,25 @@ class MyClient(discord.Client):
             return
 
         if message.content == '>topic':
-            a = ''
-        elif message.content == '>train':
-            await message.channel.send('Training')
-            self.model = word2vec.Word2Vec(self.messagelist, size=100, window=3, iter=100)
-            await message.channel.send('Training end')
+            await message.channel.send('The topic of this channel is ' + max(self.topic, key=self.topic.count))
+
+        elif message.content == '>last_topic':
+            await message.channel.send('The topic of last chat was ' + self.topic[-1])
+
         elif message.content == '>reset':
-            self.model = ''
+            self.topic = []
             self.messagelist = []
 
         else:
-            self.messagelist = self.messagelist + \
-                okt.pos(message.content, norm=True, stem=True, join=True)
+            new_message = re.sub("[^가-힣 ]", "", message.content)
+            new_message = spell_checker.check(new_message)
+            new_message = new_message.checked
+            new_message = [' '.join(okt.morphs(new_message, stem=True))]
+
+            message_tfidf = tfidfvect.transform(new_message).toarray().tolist()
+
+            self.topic.append(model.predict(message_tfidf)[0])
+            self.messagelist.append(new_message)
             print(self.messagelist)
 
     async def on_typing(self, channel, user, when):
